@@ -1,21 +1,16 @@
 1. Follow the steps on https://github.com/teaching-on-testbeds/k8s/blob/main/reserve_fabric/index.md
 2. Step 2: Remove Calico
-Delete Calico Resources: Run the following command to remove the Calico resources:
+[Delete Calico Resources: Run the following command to remove the Calico resources:]
 
-bash
-Copy code
 kubectl delete -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/calico.yaml
-Confirm Calico Components are Removed: Check if all Calico pods are removed:
+[Confirm Calico Components are Removed: Check if all Calico pods are removed:]
 
-bash
-Copy code
 kubectl get pods -A | grep calico
-If there are leftover pods, manually delete them.
 
-Clean Up Calico Configuration: Remove Calico-specific custom resources (CRDs):
+[If there are leftover pods, manually delete them.
 
-bash
-Copy code
+Clean Up Calico Configuration: Remove Calico-specific custom resources (CRDs):]
+
 kubectl delete crd networkpolicies.crd.projectcalico.org \
                    bgppeers.crd.projectcalico.org \
                    ippools.crd.projectcalico.org
@@ -51,11 +46,6 @@ e. Try to access the server through the service: kubectl exec -n cilium-test -it
 
 INSTALL HELM FOR MONITORING
 1. sudo snap install helm --classic
-
-
-helm install cilium cilium/cilium --version 1.16.4 --namespace kube-system
-
-
 * security threats to work with
 - L2 attack (ARP spoofing)
 - Traffic Eavesdropping
@@ -63,95 +53,5 @@ helm install cilium cilium/cilium --version 1.16.4 --namespace kube-system
 - Host Service Access
 
 
+I have four nodes in my kubernetes cluster with cilium installed as the CNI and using docker, two nodes are control and two nodes are worker nodes, I have deployed two pods with nginx client and server with a service on the cluster.
 
-
-I have four nodes in my kubernetes cluster with cilium installed as the CNI and using docker, two nodes are control and two nodes are worker nodes, I have deployed two pods with nginx client and server with a service on the cluster. I want to carry out an experiment to demonstrate arp spoofing attack. Give me a step by step commands to use and on which nodes or pods to run them
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-6. Step 1: Prepare iPerf Environment
-Ensure that the iperf utility is installed on both the nginx-client and nginx-server containers.
-
-Install iPerf:
-Run the following commands inside each pod to install iperf:
-
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-client -- sh
-apt-get update && apt-get install -y iperf
-exit
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-server -- sh
-apt-get update && apt-get install -y iperf
-exit
-Step 2: Run iPerf Server
-Start the iPerf server in the nginx-server pod:
-
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-server -- iperf -s -u -1
-Explanation:
-iperf -s: Starts the iPerf server to listen for incoming connections.
-Keep this terminal open, or run it in the background (e.g., iperf -s &).
-Step 3: Run iPerf Client
-Run the iPerf client in the nginx-client pod and connect it to the server:
-
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-client -- iperf -c <nginx-server-pod-IP>
-Replace <nginx-server-pod-IP> with the IP of the nginx-server pod. To get the pod IP:
-bash
-Copy code
-kubectl get pod -n cilium-test nginx-server -o wide
-Example command:
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-client -- iperf -c 10.233.76.32
-Step 4: Analyze the Results
-The iPerf output will show metrics like bandwidth, transfer rate, and jitter for the connection between the client and server.
-
-Step 5: Test Different Scenarios
-You can now modify iPerf parameters to test different traffic profiles:
-
-UDP Traffic:
-
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-client -- iperf -u -c <nginx-server-pod-IP> -b 100M
--u: Use UDP protocol.
--b 100M: Set bandwidth to 100 Mbps.
-Custom Time Duration:
-
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-client -- iperf -c <nginx-server-pod-IP> -t 60
--t 60: Run the test for 60 seconds.
-Parallel Connections:
-
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-client -- iperf -c <nginx-server-pod-IP> -P 4
--P 4: Run 4 parallel streams.
-Step 6: Cleanup
-If you ran the iPerf server in the foreground, terminate it in the nginx-server pod by pressing Ctrl+C or use:
-
-bash
-Copy code
-kubectl exec -n cilium-test -it nginx-server -- pkill iperf
